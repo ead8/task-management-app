@@ -169,6 +169,33 @@ Content-Type: application/json
 
 5. **Open** [http://localhost:3000](http://localhost:3000)
 
+## Testing
+
+This project uses **Vitest**. Tests live in `__tests__/`.
+
+```bash
+# install deps
+pnpm install
+
+# run all tests once
+pnpm test
+
+# watch mode
+pnpm test:watch
+```
+
+Run a single test file:
+```bash
+pnpm test -- __tests__/api-tasks.test.ts
+```
+
+Run tests matching a name:
+```bash
+pnpm test -- -t "should require a title"
+```
+
+(If you don’t use pnpm, replace `pnpm` with `npm`.)
+
 ## Security
 
 - Passwords are hashed with **PBKDF2-SHA512** (100,000 iterations, 64-byte key)
