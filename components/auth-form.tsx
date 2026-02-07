@@ -4,7 +4,8 @@ import React from "react"
 
 import { useState } from "react"
 import { useAuth } from "./auth-provider"
-import { LogIn, UserPlus, Mail, Lock, User, Loader2 } from "lucide-react"
+import { LogIn, UserPlus, Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react"
+import { PASSWORD_MIN_LENGTH, validatePassword } from "@/lib/validation"
 
 export function AuthForm() {
   const { login, register } = useAuth()
@@ -12,12 +13,29 @@ export function AuthForm() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+
+    if (mode === "register") {
+      const passwordValidation = validatePassword(password)
+      if (!passwordValidation.valid) {
+        setError(passwordValidation.error ?? "Password is invalid")
+        return
+      }
+
+      if (password !== confirmPassword) {
+        setError("Passwords do not match")
+        return
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -126,16 +144,78 @@ export function AuthForm() {
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "register" ? "Min 6 characters" : "Your password"}
+                  placeholder={
+                    mode === "register"
+                      ? `At least ${PASSWORD_MIN_LENGTH} characters`
+                      : "Your password"
+                  }
                   required
-                  minLength={6}
-                  className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  minLength={mode === "register" ? PASSWORD_MIN_LENGTH : undefined}
+                  className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
+              {mode === "register" && (
+                <p className="text-xs text-muted-foreground">
+                  Use {PASSWORD_MIN_LENGTH}+ characters with upper/lowercase, a number, and a
+                  symbol.
+                </p>
+              )}
             </div>
+
+            {mode === "register" && (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Confirm password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    required
+                    minLength={PASSWORD_MIN_LENGTH}
+                    className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    aria-label={
+                      showConfirmPassword ? "Hide confirm password" : "Show confirm password"
+                    }
+                    aria-pressed={showConfirmPassword}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -172,6 +252,9 @@ export function AuthForm() {
                   onClick={() => {
                     setMode("register")
                     setError("")
+                    setConfirmPassword("")
+                    setShowPassword(false)
+                    setShowConfirmPassword(false)
                   }}
                   className="font-medium text-primary hover:underline"
                 >
@@ -186,6 +269,9 @@ export function AuthForm() {
                   onClick={() => {
                     setMode("login")
                     setError("")
+                    setConfirmPassword("")
+                    setShowPassword(false)
+                    setShowConfirmPassword(false)
                   }}
                   className="font-medium text-primary hover:underline"
                 >

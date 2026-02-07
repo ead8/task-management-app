@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db"
 import { hashPassword, createSession } from "@/lib/auth"
+import { validateEmail, validateName, validatePassword } from "@/lib/validation"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
@@ -7,28 +8,33 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, email, password } = body
 
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
+    const nameValidation = validateName(name)
+    if (!nameValidation.valid) {
       return NextResponse.json(
-        { error: "Name must be at least 2 characters" },
+        { error: nameValidation.error ?? "Name is invalid" },
         { status: 400 }
       )
     }
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.valid) {
       return NextResponse.json(
-        { error: "Valid email is required" },
+        { error: emailValidation.error ?? "Email is invalid" },
         { status: 400 }
       )
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
+        { error: passwordValidation.error ?? "Password is invalid" },
         { status: 400 }
       )
     }
 
-    const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase().trim()}`
+    const normalizedEmail = email.toLowerCase().trim()
+
+    const existing = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`
     if (existing.length > 0) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
 
     const result = await sql`
       INSERT INTO users (name, email, password_hash)
-      VALUES (${name.trim()}, ${email.toLowerCase().trim()}, ${hashedPassword})
+      VALUES (${name.trim()}, ${normalizedEmail}, ${hashedPassword})
       RETURNING id, name, email
     `
 

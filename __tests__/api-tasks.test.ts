@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import { validatePassword } from "@/lib/validation"
 
 // These tests verify the API contract and validation logic
 // without hitting the actual database
@@ -78,16 +79,16 @@ describe("Auth API contract", () => {
       expect(email.includes("@")).toBe(false)
     })
 
-    it("should require password of at least 6 chars", () => {
-      expect("12345".length >= 6).toBe(false)
-      expect("123456".length >= 6).toBe(true)
+    it("should require a strong password", () => {
+      expect(validatePassword("weakpass").valid).toBe(false)
+      expect(validatePassword("Secure123!").valid).toBe(true)
     })
 
     it("should accept valid registration data", () => {
-      const data = { name: "John Doe", email: "john@example.com", password: "secure123" }
+      const data = { name: "John Doe", email: "john@example.com", password: "Secure123!" }
       expect(data.name.trim().length >= 2).toBe(true)
       expect(data.email.includes("@")).toBe(true)
-      expect(data.password.length >= 6).toBe(true)
+      expect(validatePassword(data.password).valid).toBe(true)
     })
   })
 

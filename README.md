@@ -199,6 +199,7 @@ pnpm test -- -t "should require a title"
 ## Security
 
 - Passwords are hashed with **PBKDF2-SHA512** (100,000 iterations, 64-byte key)
+- Registration enforces **strong passwords** (8+ chars with upper/lowercase, a number, and a symbol; rejects common passwords)
 - Sessions are stored server-side in the `sessions` table; the client stores the session token in `localStorage` and sends it as `Authorization: Bearer <token>`
 - All SQL queries use **parameterized queries** to prevent injection
 - Tasks are **scoped per user** -- users can only access their own data

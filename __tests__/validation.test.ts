@@ -7,6 +7,7 @@ import {
   validateName,
   sanitizeTaskInput,
   VALID_STATUSES,
+  PASSWORD_MIN_LENGTH,
 } from "@/lib/validation"
 
 describe("validateTitle", () => {
@@ -78,9 +79,9 @@ describe("validateEmail", () => {
 
 describe("validatePassword", () => {
   it("rejects short passwords", () => {
-    expect(validatePassword("12345")).toEqual({
+    expect(validatePassword("1234567")).toEqual({
       valid: false,
-      error: "Password must be at least 6 characters",
+      error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
     })
   })
 
@@ -88,12 +89,33 @@ describe("validatePassword", () => {
     expect(validatePassword("").valid).toBe(false)
   })
 
-  it("accepts valid password", () => {
-    expect(validatePassword("secure123")).toEqual({ valid: true })
+  it("rejects passwords without required character types", () => {
+    expect(validatePassword("lowercase1!").valid).toBe(false) // missing uppercase
+    expect(validatePassword("UPPERCASE1!").valid).toBe(false) // missing lowercase
+    expect(validatePassword("NoNumber!").valid).toBe(false) // missing number
+    expect(validatePassword("NoSymbol1").valid).toBe(false) // missing symbol
   })
 
-  it("accepts exactly 6 characters", () => {
-    expect(validatePassword("123456").valid).toBe(true)
+  it("rejects passwords with spaces", () => {
+    expect(validatePassword("Secure 1!")).toEqual({
+      valid: false,
+      error: "Password must not contain spaces",
+    })
+  })
+
+  it("rejects common passwords", () => {
+    expect(validatePassword("Password1!")).toEqual({
+      valid: false,
+      error: "Password is too common",
+    })
+  })
+
+  it("accepts a strong password", () => {
+    expect(validatePassword("Secure123!")).toEqual({ valid: true })
+  })
+
+  it("accepts exactly the minimum length", () => {
+    expect(validatePassword("Aa1!aaaa").valid).toBe(true)
   })
 })
 
